@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>環境部官網 - 實境解謎</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #333; font-family: sans-serif; }
+        canvas { display: block; }
+        
+        /* 對話框 UI */
+        #dialogBox {
+            position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+            width: 80%; max-width: 400px; background: rgba(255, 255, 255, 0.95);
+            padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: none; z-index: 10; border: 2px solid #4CAF50;
+        }
+        #dialogText { font-size: 16px; line-height: 1.5; color: #333; margin-bottom: 15px; }
+        #dialogBtn {
+            background: #4CAF50; color: white; border: none; padding: 10px 15px;
+            border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; display: none;
+        }
+        
+        /* 手機虛擬搖桿 UI */
+        #dpad {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 150px; height: 150px; display: flex; flex-wrap: wrap; z-index: 5;
+        }
+        .dbtn { width: 33.3%; height: 33.3%; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.3); border-radius: 8px; user-select: none; }
+        .dbtn:active { background: rgba(255,255,255,0.6); }
+        .empty { background: transparent; }
+        /* 電腦端自動隱藏搖桿 */
+        @media (min-width: 768px) { #dpad { display: none; } }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="dialogBox">
+        <div id="dialogText">這裡會顯示任務文字...</div>
+        <button id="dialogBtn" onclick="closeDialog()">繼續探索</button>
+        <a id="actionLink" href="#" target="_blank" style="display:none; text-decoration:none;">
+            <button style="background: #2196F3; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px;">前往真實官網</button>
+        </a>
+    </div>
+
+    <div id="dpad">
+        <div class="dbtn empty"></div><div class="dbtn" id="btnUp">⬆️</div><div class="dbtn empty"></div>
+        <div class="dbtn" id="btnLeft">⬅️</div><div class="dbtn empty"></div><div class="dbtn" id="btnRight">➡️</div>
+        <div class="dbtn empty"></div><div class="dbtn" id="btnDown">⬇️</div><div class="dbtn empty"></div>
+    </div>
+
+<script>
+// ==========================================
+// 🛠️ 開發者設定區 (Config) - 修改這裡就好！
+// ==========================================
+const CONFIG = {
+    bgSrc: './bg.jpg', // 背景長截圖路徑
+    playerColor: '#007BFF', // 玩家方塊顏色
+    playerSpeed: 7, // 玩家走路速度
+    playerSize: 40,
+    items: [
+        { 
+            id: 1, x: 200, y: 300, width: 50, height: 50, color: '#4CAF50', icon: '🌍',
+            text: '發現「空品監測網」入口！請前往真實官網找出今天的指標顏色。',
+            link: 'https://data.moenv.gov.tw/' // 可替換為真實連結
+        },
+        { 
+            id: 2, x: 500, y: 800, width: 50, height: 50, color: '#FF9800', icon: '💰',
+            text: '發現「碳費專區」寶箱！密碼就藏在常見問答裡。',
+            link: 'https://www.moenv.gov.tw/' 
+        }
+    ]
+};
+// ==========================================
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const bgImage = new Image();
+let bgLoaded = false;
+let logicWidth, logicHeight; 
+
+// 玩家狀態
+const player = { x: 100, y: 100, vx: 0, vy: 0 };
+let activeItem = null; 
+let isDialogOpen = false;
+
+// 鍵盤與搖桿狀態
+const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+
+// 載入圖片
+bgImage.src = CONFIG.bgSrc;
+bgImage.onload = () => { bgLoaded = true; resize(); requestAnimationFrame(gameLoop); };
+
+// 解析度與 Retina 修正
+function resize() {
+    const ratio = window.devicePixelRatio || 1;
+    logicWidth = window.innerWidth;
+    logicHeight = window.innerHeight;
+    canvas.width = logicWidth * ratio;
+    canvas.height = logicHeight * ratio;
+    canvas.style.width = logicWidth + 'px';
+    canvas.style.height = logicHeight + 'px';
+    ctx.scale(ratio, ratio);
+}
+window.addEventListener('resize', resize);
+
+// 遊戲主迴圈
+function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+function update() {
+    if (isDialogOpen || !bgLoaded) return; // 開啟對話框時停止移動
+
+    let dx = 0; let dy = 0;
+    if (keys.w || keys.ArrowUp) dy -= 1;
+    if (keys.s || keys.ArrowDown) dy += 1;
+    if (keys.a || keys.ArrowLeft) dx -= 1;
+    if (keys.d || keys.ArrowRight) dx += 1;
+
+    // 向量標準化 (斜走不會變快)
+    if (dx !== 0 && dy !== 0) {
+        const length = Math.sqrt(dx * dx + dy * dy);
+        dx /= length; dy /= length;
+    }
+
+    // 更新位置並限制在背景圖範圍內
+    player.x += dx * CONFIG.playerSpeed;
+    player.y += dy * CONFIG.playerSpeed;
+    player.x = Math.max(0, Math.min(player.x, bgImage.width - CONFIG.playerSize));
+    player.y = Math.max(0, Math.min(player.y, bgImage.height - CONFIG.playerSize));
+
+    // 碰撞偵測 (碰到物件)
+    let touched = false;
+    for (let item of CONFIG.items) {
+        if (player.x < item.x + item.width && player.x + CONFIG.playerSize > item.x &&
+            player.y < item.y + item.height && player.y + CONFIG.playerSize > item.y) {
+            if (activeItem !== item) {
+                activeItem = item;
+                openDialog(item);
+            }
+            touched = true;
+        }
+    }
+    if (!touched) activeItem = null;
+}
+
+function draw() {
+    if (!bgLoaded) return;
+    ctx.clearRect(0, 0, logicWidth, logicHeight);
+
+    // 攝影機計算 (將玩家保持在螢幕中央)
+    let camX = player.x + CONFIG.playerSize/2 - logicWidth/2;
+    let camY = player.y + CONFIG.playerSize/2 - logicHeight/2;
+    
+    // 攝影機邊界限制
+    camX = Math.max(0, Math.min(camX, bgImage.width - logicWidth));
+    camY = Math.max(0, Math.min(camY, bgImage.height - logicHeight));
+
+    ctx.save();
+    // 移動畫布來模擬攝影機跟隨
+    ctx.translate(-camX, -camY);
+
+    // 1. 畫背景
+    ctx.drawImage(bgImage, 0, 0);
+
+    // 2. 畫互動圖示
+    CONFIG.items.forEach(item => {
+        ctx.fillStyle = item.color;
+        ctx.fillRect(item.x, item.y, item.width, item.height);
+        ctx.fillStyle = 'white';
+        ctx.font = '30px Arial';
+        ctx.fillText(item.icon, item.x + 5, item.y + 35);
+    });
+
+    // 3. 畫玩家
+    ctx.fillStyle = CONFIG.playerColor;
+    ctx.fillRect(player.x, player.y, CONFIG.playerSize, CONFIG.playerSize);
+    ctx.fillStyle = 'white'; ctx.font = '24px Arial'; ctx.fillText('🕵️', player.x + 5, player.y + 28);
+
+    ctx.restore();
+}
+
+// 互動對話邏輯
+function openDialog(item) {
+    isDialogOpen = true;
+    document.getElementById('dialogText').innerText = item.text;
+    document.getElementById('dialogBtn').style.display = 'block';
+    
+    const actionLink = document.getElementById('actionLink');
+    if(item.link) {
+        actionLink.href = item.link;
+        actionLink.style.display = 'block';
+    } else {
+        actionLink.style.display = 'none';
+    }
+    document.getElementById('dialogBox').style.display = 'block';
+}
+
+window.closeDialog = function() {
+    isDialogOpen = false;
+    document.getElementById('dialogBox').style.display = 'none';
+    // 把玩家往後彈一點點避免重複觸發
+    player.y += 10; 
+}
+
+// 鍵盤事件監聽
+window.addEventListener('keydown', e => { if(keys.hasOwnProperty(e.key)) keys[e.key] = true; });
+window.addEventListener('keyup', e => { if(keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+
+// 虛擬搖桿事件監聽 (支援手機觸控)
+const bindBtn = (id, key) => {
+    const btn = document.getElementById(id);
+    btn.addEventListener('touchstart', e => { e.preventDefault(); keys[key] = true; });
+    btn.addEventListener('touchend', e => { e.preventDefault(); keys[key] = false; });
+    btn.addEventListener('mousedown', e => { keys[key] = true; });
+    btn.addEventListener('mouseup', e => { keys[key] = false; });
+};
+bindBtn('btnUp', 'w'); bindBtn('btnDown', 's'); bindBtn('btnLeft', 'a'); bindBtn('btnRight', 'd');
+
+</script>
+</body>
+</html>
