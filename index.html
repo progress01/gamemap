@@ -2,226 +2,424 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>環境部官網 - 實境解謎</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神秘亂碼傳圖器 (LINE一包流版)</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #333; font-family: sans-serif; }
-        canvas { display: block; }
+        :root {
+            --primary-color: #0f172a;
+            --primary-hover: #334155;
+            --accent-color: #8b5cf6; /* 改為帶有神秘感的紫色 */
+            --accent-hover: #7c3aed;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #334155;
+            --border-color: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; }
+
+        header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        header p { color: #64748b; font-weight: bold;}
+
+        .mode-switcher {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            background: #e2e8f0;
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #f8fafc;
+            color: #64748b;
+            transition: all 0.2s ease;
+        }
         
-        /* 對話框 UI */
-        #dialogBox {
-            position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
-            width: 80%; max-width: 400px; background: rgba(255, 255, 255, 0.95);
-            padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: none; z-index: 10; border: 2px solid #4CAF50;
+        .mode-btn:hover { background: #ffffff; }
+        
+        .mode-btn.active {
+            background: var(--accent-color);
+            color: #ffffff;
+            border-color: var(--accent-hover);
+            box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.3);
         }
-        #dialogText { font-size: 16px; line-height: 1.5; color: #333; margin-bottom: 15px; }
-        #dialogBtn {
-            background: #4CAF50; color: white; border: none; padding: 10px 15px;
-            border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; display: none;
+
+        .module-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .module-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 2.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--accent-color);
+            background: #f5f3ff;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 1rem;
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+            background: #f5f3ff;
+            transition: 0.2s;
+        }
+        textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+            background: #ffffff;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.85rem 1rem;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #fff;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            width: 100%;
+            gap: 0.5rem;
+        }
+        .btn:hover:not(:disabled) { background-color: var(--accent-hover); transform: translateY(-1px); }
+        .btn:disabled { cursor: not-allowed; opacity: 0.8; }
+        .btn-success { background-color: var(--success-color); }
+        .btn-success:hover:not(:disabled) { background-color: #047857; }
+        .btn-warning { background-color: var(--warning-color); color: #000; }
+        .btn-warning:hover:not(:disabled) { background-color: #d97706; }
+
+        .hidden { display: none !important; }
+        .status-msg { font-size: 1rem; margin-top: 0.5rem; text-align: center; font-weight: bold; padding: 0.5rem; border-radius: 6px;}
+        
+        #imageDisplayArea {
+            transition: all 0.5s ease;
         }
         
-        /* 手機虛擬搖桿 UI */
-        #dpad {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            width: 150px; height: 150px; display: flex; flex-wrap: wrap; z-index: 5;
+        /* 復古掃描線效果，增加神秘感 */
+        .scanned-img {
+            max-width: 100%; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); 
+            animation: fadeIn 0.8s ease-in-out;
+            image-rendering: pixelated; /* 讓低畫質更有像素風的感覺 */
         }
-        .dbtn { width: 33.3%; height: 33.3%; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.3); border-radius: 8px; user-select: none; }
-        .dbtn:active { background: rgba(255,255,255,0.6); }
-        .empty { background: transparent; }
-        /* 電腦端自動隱藏搖桿 */
-        @media (min-width: 768px) { #dpad { display: none; } }
     </style>
 </head>
 <body>
 
-    <canvas id="gameCanvas"></canvas>
+<div class="container">
+    <header>
+        <h1>🕵️ 神秘亂碼傳圖器</h1>
+        <p>【LINE 對話框一包流特化版】</p>
+    </header>
 
-    <div id="dialogBox">
-        <div id="dialogText">這裡會顯示任務文字...</div>
-        <button id="dialogBtn" onclick="closeDialog()">繼續探索</button>
-        <a id="actionLink" href="#" target="_blank" style="display:none; text-decoration:none;">
-            <button style="background: #2196F3; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px;">前往真實官網</button>
-        </a>
+    <div class="mode-switcher">
+        <button class="mode-btn active" id="modeSenderBtn">🪄 製作密碼<br><span style="font-size:0.8rem; font-weight:normal;">(將圖片壓縮成一段亂碼)</span></button>
+        <button class="mode-btn" id="modeReceiverBtn">👁️ 解開密碼<br><span style="font-size:0.8rem; font-weight:normal;">(將亂碼還原成高糊神秘圖)</span></button>
     </div>
 
-    <div id="dpad">
-        <div class="dbtn empty"></div><div class="dbtn" id="btnUp">⬆️</div><div class="dbtn empty"></div>
-        <div class="dbtn" id="btnLeft">⬅️</div><div class="dbtn empty"></div><div class="dbtn" id="btnRight">➡️</div>
-        <div class="dbtn empty"></div><div class="dbtn" id="btnDown">⬇️</div><div class="dbtn empty"></div>
+    <div id="senderSection">
+        <div class="module-section">
+            <div class="module-title">✨ 第一步：上傳圖片 (自動極限壓縮)</div>
+            <p style="font-size:0.9rem; color:#64748b; margin-bottom:1rem;">系統會自動將圖片縮小並破壞畫質，以符合 LINE 單則氣泡的極限容量 (8KB)。</p>
+            
+            <div class="drop-zone" id="imgDropZone">
+                <p style="font-weight: bold; font-size: 1.2rem; margin-bottom: 0.5rem;">📸 點擊拍照 或 選擇圖片</p>
+                <input type="file" id="imgInput" accept="image/*" class="hidden">
+            </div>
+
+            <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
+                <label style="margin:0; font-weight:bold;">畫質破壞度:</label>
+                <input type="range" id="imgQuality" min="1" max="50" value="10" style="flex:1;">
+                <span id="imgQualityVal" style="font-weight:bold; color: var(--accent-color);">極限 10%</span>
+            </div>
+
+            <div style="text-align:center; margin-top: 1rem;">
+                <img id="webpPreview" class="hidden scanned-img" style="max-height:150px; margin: 0.5rem auto;">
+                <div id="imgStatus" class="status-msg"></div>
+            </div>
+        </div>
+
+        <div class="module-section hidden" id="packSection">
+            <div class="module-title">📜 第二步：複製專屬密碼</div>
+            <p style="font-size:0.9rem; color:#64748b; margin-bottom:1rem;">已經將這張圖轉化為 LINE 氣泡專用密碼。點擊下方按鈕複製，然後直接去 LINE 貼給朋友！</p>
+            
+            <div style="background: #f1f5f9; padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 1rem;">
+                <span id="secretCodePreview" style="font-family: monospace; font-size: 0.8rem; color: #64748b; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"></span>
+            </div>
+
+            <button class="btn btn-warning" id="copyCodeBtn">📋 一鍵複製完整密碼</button>
+            <div id="copyStatus" class="status-msg"></div>
+        </div>
     </div>
+
+    <div id="receiverSection" class="hidden">
+        <div class="module-section">
+            <div class="module-title">👁️ 貼上朋友傳來的密碼</div>
+            <p style="font-size:0.9rem; color:#64748b; margin-bottom:1rem;">把在 LINE 複製的那一大串亂碼貼到下面的黑洞裡，點擊解碼就能看到隱藏的圖片！</p>
+            
+            <textarea id="pasteArea" placeholder="👉 點擊這裡，然後貼上神秘密碼..."></textarea>
+            
+            <button class="btn btn-success" style="margin-top: 1rem;" id="restoreBtn">✨ 執行解碼</button>
+            <button class="btn btn-outline" style="margin-top: 0.5rem;" id="clearBufferBtn">🗑️ 清空重來</button>
+            
+            <div id="b2fStatus" class="status-msg" style="margin-top: 1rem;"></div>
+            
+            <div id="imageDisplayArea"></div>
+        </div>
+    </div>
+</div>
 
 <script>
-// ==========================================
-// 🛠️ 開發者設定區 (Config) - 修改這裡就好！
-// ==========================================
-const CONFIG = {
-    bgSrc: './bg.jpg', // 背景長截圖路徑
-    playerColor: '#007BFF', // 玩家方塊顏色
-    playerSpeed: 7, // 玩家走路速度
-    playerSize: 40,
-    items: [
-        { 
-            id: 1, x: 200, y: 300, width: 50, height: 50, color: '#4CAF50', icon: '🌍',
-            text: '發現「空品監測網」入口！請前往真實官網找出今天的指標顏色。',
-            link: 'https://data.moenv.gov.tw/' // 可替換為真實連結
-        },
-        { 
-            id: 2, x: 500, y: 800, width: 50, height: 50, color: '#FF9800', icon: '💰',
-            text: '發現「碳費專區」寶箱！密碼就藏在常見問答裡。',
-            link: 'https://www.moenv.gov.tw/' 
-        }
-    ]
-};
-// ==========================================
+    // === UI 切換邏輯 ===
+    const modeSenderBtn = document.getElementById('modeSenderBtn');
+    const modeReceiverBtn = document.getElementById('modeReceiverBtn');
+    const senderSection = document.getElementById('senderSection');
+    const receiverSection = document.getElementById('receiverSection');
 
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const bgImage = new Image();
-let bgLoaded = false;
-let logicWidth, logicHeight; 
-
-// 玩家狀態
-const player = { x: 100, y: 100, vx: 0, vy: 0 };
-let activeItem = null; 
-let isDialogOpen = false;
-
-// 鍵盤與搖桿狀態
-const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
-
-// 載入圖片
-bgImage.src = CONFIG.bgSrc;
-bgImage.onload = () => { bgLoaded = true; resize(); requestAnimationFrame(gameLoop); };
-
-// 解析度與 Retina 修正
-function resize() {
-    const ratio = window.devicePixelRatio || 1;
-    logicWidth = window.innerWidth;
-    logicHeight = window.innerHeight;
-    canvas.width = logicWidth * ratio;
-    canvas.height = logicHeight * ratio;
-    canvas.style.width = logicWidth + 'px';
-    canvas.style.height = logicHeight + 'px';
-    ctx.scale(ratio, ratio);
-}
-window.addEventListener('resize', resize);
-
-// 遊戲主迴圈
-function gameLoop() {
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-function update() {
-    if (isDialogOpen || !bgLoaded) return; // 開啟對話框時停止移動
-
-    let dx = 0; let dy = 0;
-    if (keys.w || keys.ArrowUp) dy -= 1;
-    if (keys.s || keys.ArrowDown) dy += 1;
-    if (keys.a || keys.ArrowLeft) dx -= 1;
-    if (keys.d || keys.ArrowRight) dx += 1;
-
-    // 向量標準化 (斜走不會變快)
-    if (dx !== 0 && dy !== 0) {
-        const length = Math.sqrt(dx * dx + dy * dy);
-        dx /= length; dy /= length;
-    }
-
-    // 更新位置並限制在背景圖範圍內
-    player.x += dx * CONFIG.playerSpeed;
-    player.y += dy * CONFIG.playerSpeed;
-    player.x = Math.max(0, Math.min(player.x, bgImage.width - CONFIG.playerSize));
-    player.y = Math.max(0, Math.min(player.y, bgImage.height - CONFIG.playerSize));
-
-    // 碰撞偵測 (碰到物件)
-    let touched = false;
-    for (let item of CONFIG.items) {
-        if (player.x < item.x + item.width && player.x + CONFIG.playerSize > item.x &&
-            player.y < item.y + item.height && player.y + CONFIG.playerSize > item.y) {
-            if (activeItem !== item) {
-                activeItem = item;
-                openDialog(item);
-            }
-            touched = true;
-        }
-    }
-    if (!touched) activeItem = null;
-}
-
-function draw() {
-    if (!bgLoaded) return;
-    ctx.clearRect(0, 0, logicWidth, logicHeight);
-
-    // 攝影機計算 (將玩家保持在螢幕中央)
-    let camX = player.x + CONFIG.playerSize/2 - logicWidth/2;
-    let camY = player.y + CONFIG.playerSize/2 - logicHeight/2;
-    
-    // 攝影機邊界限制
-    camX = Math.max(0, Math.min(camX, bgImage.width - logicWidth));
-    camY = Math.max(0, Math.min(camY, bgImage.height - logicHeight));
-
-    ctx.save();
-    // 移動畫布來模擬攝影機跟隨
-    ctx.translate(-camX, -camY);
-
-    // 1. 畫背景
-    ctx.drawImage(bgImage, 0, 0);
-
-    // 2. 畫互動圖示
-    CONFIG.items.forEach(item => {
-        ctx.fillStyle = item.color;
-        ctx.fillRect(item.x, item.y, item.width, item.height);
-        ctx.fillStyle = 'white';
-        ctx.font = '30px Arial';
-        ctx.fillText(item.icon, item.x + 5, item.y + 35);
+    modeSenderBtn.addEventListener('click', () => {
+        modeSenderBtn.classList.add('active');
+        modeReceiverBtn.classList.remove('active');
+        senderSection.classList.remove('hidden');
+        receiverSection.classList.add('hidden');
     });
 
-    // 3. 畫玩家
-    ctx.fillStyle = CONFIG.playerColor;
-    ctx.fillRect(player.x, player.y, CONFIG.playerSize, CONFIG.playerSize);
-    ctx.fillStyle = 'white'; ctx.font = '24px Arial'; ctx.fillText('🕵️', player.x + 5, player.y + 28);
+    modeReceiverBtn.addEventListener('click', () => {
+        modeReceiverBtn.classList.add('active');
+        modeSenderBtn.classList.remove('active');
+        receiverSection.classList.remove('hidden');
+        senderSection.classList.add('hidden');
+    });
 
-    ctx.restore();
-}
-
-// 互動對話邏輯
-function openDialog(item) {
-    isDialogOpen = true;
-    document.getElementById('dialogText').innerText = item.text;
-    document.getElementById('dialogBtn').style.display = 'block';
-    
-    const actionLink = document.getElementById('actionLink');
-    if(item.link) {
-        actionLink.href = item.link;
-        actionLink.style.display = 'block';
-    } else {
-        actionLink.style.display = 'none';
+    // === 通用函式 ===
+    function showStatus(elId, msg, type) {
+        const el = document.getElementById(elId);
+        el.innerHTML = msg; 
+        if (type === 'success') {
+            el.style.backgroundColor = '#ecfdf5';
+            el.style.color = '#065f46';
+        } else if (type === 'warning') {
+            el.style.backgroundColor = '#fef3c7';
+            el.style.color = '#b45309';
+        } else if (type === 'error') {
+            el.style.backgroundColor = '#fef2f2';
+            el.style.color = '#991b1b';
+        } else {
+            el.style.backgroundColor = 'transparent';
+        }
     }
-    document.getElementById('dialogBox').style.display = 'block';
-}
 
-window.closeDialog = function() {
-    isDialogOpen = false;
-    document.getElementById('dialogBox').style.display = 'none';
-    // 把玩家往後彈一點點避免重複觸發
-    player.y += 10; 
-}
+    // === 模組一：自動縮小 + 極限壓縮 ===
+    const imgDropZone = document.getElementById('imgDropZone');
+    const imgInput = document.getElementById('imgInput');
+    const imgQuality = document.getElementById('imgQuality');
+    const imgQualityVal = document.getElementById('imgQualityVal');
+    const webpPreview = document.getElementById('webpPreview');
+    const packSection = document.getElementById('packSection');
+    const secretCodePreview = document.getElementById('secretCodePreview');
+    const copyCodeBtn = document.getElementById('copyCodeBtn');
+    
+    let finalBase64Code = "";
 
-// 鍵盤事件監聽
-window.addEventListener('keydown', e => { if(keys.hasOwnProperty(e.key)) keys[e.key] = true; });
-window.addEventListener('keyup', e => { if(keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+    imgDropZone.addEventListener('click', () => imgInput.click());
+    imgDropZone.addEventListener('dragover', e => { e.preventDefault(); imgDropZone.classList.add('dragover'); });
+    imgDropZone.addEventListener('dragleave', () => imgDropZone.classList.remove('dragover'));
+    imgDropZone.addEventListener('drop', e => {
+        e.preventDefault(); imgDropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) processImg(e.dataTransfer.files[0]);
+    });
+    imgInput.addEventListener('change', e => { if (e.target.files.length) processImg(e.target.files[0]); });
+    
+    imgQuality.addEventListener('input', e => {
+        imgQualityVal.textContent = `破壞度 ${e.target.value}%`;
+        if (imgInput.files.length) processImg(imgInput.files[0]);
+    });
 
-// 虛擬搖桿事件監聽 (支援手機觸控)
-const bindBtn = (id, key) => {
-    const btn = document.getElementById(id);
-    btn.addEventListener('touchstart', e => { e.preventDefault(); keys[key] = true; });
-    btn.addEventListener('touchend', e => { e.preventDefault(); keys[key] = false; });
-    btn.addEventListener('mousedown', e => { keys[key] = true; });
-    btn.addEventListener('mouseup', e => { keys[key] = false; });
-};
-bindBtn('btnUp', 'w'); bindBtn('btnDown', 's'); bindBtn('btnLeft', 'a'); bindBtn('btnRight', 'd');
+    function processImg(file) {
+        if (!file.type.startsWith('image/')) {
+            showStatus('imgStatus', '❌ 只能丟圖片進來喔！', 'error');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image();
+            img.onload = () => {
+                // 【核心：強制縮放機制】強制寬高不超過 300px
+                const MAX_SIZE = 300;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > height && width > MAX_SIZE) {
+                    height *= MAX_SIZE / width;
+                    width = MAX_SIZE;
+                } else if (height > MAX_SIZE) {
+                    width *= MAX_SIZE / height;
+                    height = MAX_SIZE;
+                }
 
+                const canvas = document.createElement('canvas');
+                canvas.width = width; 
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const quality = imgQuality.value / 100;
+                
+                // 轉為 WebP Blob 確認容量
+                canvas.toBlob(blob => {
+                    const kbSize = (blob.size / 1024).toFixed(1);
+                    webpPreview.src = URL.createObjectURL(blob);
+                    webpPreview.classList.remove('hidden');
+                    
+                    if (blob.size > 8000) {
+                        showStatus('imgStatus', `⚠️ 目前大小 ${kbSize} KB (超過 LINE 限制，請調低破壞度)`, 'warning');
+                        packSection.classList.add('hidden');
+                    } else {
+                        showStatus('imgStatus', `✅ 完美！大小僅 ${kbSize} KB，可以一包發送！`, 'success');
+                        packSection.classList.remove('hidden');
+                        
+                        // 直接將 Canvas 轉 Base64 並加上極簡標頭
+                        const rawB64 = canvas.toDataURL('image/webp', quality).split(',')[1];
+                        finalBase64Code = `?IMG?${rawB64}`; // 極簡標籤，節省字數
+                        secretCodePreview.textContent = finalBase64Code + " ... (以下省略)";
+                        
+                        // 自動捲動到按鈕
+                        packSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }, 'image/webp', quality);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    copyCodeBtn.addEventListener('click', () => {
+        if (!finalBase64Code) return;
+        navigator.clipboard.writeText(finalBase64Code).then(() => {
+            copyCodeBtn.innerHTML = '🎉 複製成功！快去貼給朋友';
+            copyCodeBtn.classList.remove('btn-warning');
+            copyCodeBtn.classList.add('btn-success');
+            
+            setTimeout(() => {
+                copyCodeBtn.innerHTML = '📋 再次複製密碼';
+                copyCodeBtn.classList.remove('btn-success');
+                copyCodeBtn.classList.add('btn-warning');
+            }, 3000);
+        });
+    });
+
+    // === 模組二：接收解碼 ===
+    const pasteArea = document.getElementById('pasteArea');
+    const restoreBtn = document.getElementById('restoreBtn');
+    const clearBufferBtn = document.getElementById('clearBufferBtn');
+    const imageDisplayArea = document.getElementById('imageDisplayArea');
+
+    function resetReceiver() {
+        pasteArea.value = '';
+        imageDisplayArea.innerHTML = '';
+        showStatus('b2fStatus', '', '');
+    }
+
+    clearBufferBtn.addEventListener('click', resetReceiver);
+
+    restoreBtn.addEventListener('click', () => {
+        let rawCode = pasteArea.value.trim();
+        if (!rawCode) {
+            showStatus('b2fStatus', '❌ 洞裡沒有東西，請貼上密碼！', 'error');
+            return;
+        }
+
+        // 偵測是否為一包流專用標籤
+        if (rawCode.startsWith('?IMG?')) {
+            const b64Data = rawCode.substring(5).replace(/\s/g, ''); // 去除標頭和空白
+            
+            imageDisplayArea.innerHTML = `
+                <h3 style="color: var(--accent-color); margin: 1rem 0;">🎉 解碼成功！</h3>
+                <img src="data:image/webp;base64,${b64Data}" class="scanned-img">
+            `;
+            
+            showStatus('b2fStatus', '', '');
+            pasteArea.value = ''; // 清空輸入框
+            
+            // 自動捲動到圖片
+            imageDisplayArea.scrollIntoView({ behavior: 'smooth' });
+            
+        } else {
+            showStatus('b2fStatus', '⚠️ 密碼格式不對，這是神秘傳圖器專屬密碼嗎？', 'warning');
+        }
+    });
 </script>
+
 </body>
 </html>
