@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神秘亂碼傳圖器 (LINE一包流版)</title>
+    <title>神秘亂碼傳圖器 (LINE黑白復古特化版)</title>
     <style>
         :root {
             --primary-color: #0f172a;
             --primary-hover: #334155;
-            --accent-color: #8b5cf6; /* 改為帶有神秘感的紫色 */
+            --accent-color: #8b5cf6; 
             --accent-hover: #7c3aed;
             --success-color: #10b981;
             --warning-color: #f59e0b;
@@ -165,13 +165,12 @@
             transition: all 0.5s ease;
         }
         
-        /* 復古掃描線效果，增加神秘感 */
         .scanned-img {
             max-width: 100%; 
             border-radius: 12px; 
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); 
             animation: fadeIn 0.8s ease-in-out;
-            image-rendering: pixelated; /* 讓低畫質更有像素風的感覺 */
+            image-rendering: pixelated; 
         }
     </style>
 </head>
@@ -180,18 +179,18 @@
 <div class="container">
     <header>
         <h1>🕵️ 神秘亂碼傳圖器</h1>
-        <p>【LINE 對話框一包流特化版】</p>
+        <p>【LINE 對話框特化｜黑白駭客版】</p>
     </header>
 
     <div class="mode-switcher">
-        <button class="mode-btn active" id="modeSenderBtn">🪄 製作密碼<br><span style="font-size:0.8rem; font-weight:normal;">(將圖片壓縮成一段亂碼)</span></button>
-        <button class="mode-btn" id="modeReceiverBtn">👁️ 解開密碼<br><span style="font-size:0.8rem; font-weight:normal;">(將亂碼還原成高糊神秘圖)</span></button>
+        <button class="mode-btn active" id="modeSenderBtn">🪄 製作密碼<br><span style="font-size:0.8rem; font-weight:normal;">(將圖片轉為復古黑白碼)</span></button>
+        <button class="mode-btn" id="modeReceiverBtn">👁️ 解開密碼<br><span style="font-size:0.8rem; font-weight:normal;">(還原神秘復古圖)</span></button>
     </div>
 
     <div id="senderSection">
         <div class="module-section">
-            <div class="module-title">✨ 第一步：上傳圖片 (自動極限壓縮)</div>
-            <p style="font-size:0.9rem; color:#64748b; margin-bottom:1rem;">系統會自動將圖片縮小並破壞畫質，以符合 LINE 單則氣泡的極限容量 (8KB)。</p>
+            <div class="module-title">✨ 第一步：上傳圖片 (自動黑白化+極限壓縮)</div>
+            <p style="font-size:0.9rem; color:#64748b; margin-bottom:1rem;">系統會自動將圖片轉為「純黑白」以大幅降低容量，讓你甚至能傳送對話截圖！</p>
             
             <div class="drop-zone" id="imgDropZone">
                 <p style="font-weight: bold; font-size: 1.2rem; margin-bottom: 0.5rem;">📸 點擊拍照 或 選擇圖片</p>
@@ -199,9 +198,9 @@
             </div>
 
             <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
-                <label style="margin:0; font-weight:bold;">畫質破壞度:</label>
-                <input type="range" id="imgQuality" min="1" max="50" value="10" style="flex:1;">
-                <span id="imgQualityVal" style="font-weight:bold; color: var(--accent-color);">極限 10%</span>
+                <label style="margin:0; font-weight:bold;">二值化對比度:</label>
+                <input type="range" id="imgQuality" min="50" max="200" value="128" style="flex:1;">
+                <span id="imgQualityVal" style="font-weight:bold; color: var(--accent-color);">預設值</span>
             </div>
 
             <div style="text-align:center; margin-top: 1rem;">
@@ -212,7 +211,7 @@
 
         <div class="module-section hidden" id="packSection">
             <div class="module-title">📜 第二步：複製專屬密碼</div>
-            <p style="font-size:0.9rem; color:#64748b; margin-bottom:1rem;">已經將這張圖轉化為 LINE 氣泡專用密碼。點擊下方按鈕複製，然後直接去 LINE 貼給朋友！</p>
+            <p style="font-size:0.9rem; color:#64748b; margin-bottom:1rem;">已經將圖片洗鍊為一包流密碼。點擊下方按鈕複製，去 LINE 貼給朋友吧！</p>
             
             <div style="background: #f1f5f9; padding: 1rem; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 1rem;">
                 <span id="secretCodePreview" style="font-family: monospace; font-size: 0.8rem; color: #64748b; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"></span>
@@ -226,11 +225,11 @@
     <div id="receiverSection" class="hidden">
         <div class="module-section">
             <div class="module-title">👁️ 貼上朋友傳來的密碼</div>
-            <p style="font-size:0.9rem; color:#64748b; margin-bottom:1rem;">把在 LINE 複製的那一大串亂碼貼到下面的黑洞裡，點擊解碼就能看到隱藏的圖片！</p>
+            <p style="font-size:0.9rem; color:#64748b; margin-bottom:1rem;">把在 LINE 複製的那一大串亂碼貼到下面的黑洞裡，立刻顯影！</p>
             
             <textarea id="pasteArea" placeholder="👉 點擊這裡，然後貼上神秘密碼..."></textarea>
             
-            <button class="btn btn-success" style="margin-top: 1rem;" id="restoreBtn">✨ 執行解碼</button>
+            <button class="btn btn-success" style="margin-top: 1rem;" id="restoreBtn">✨ 執行顯影</button>
             <button class="btn btn-outline" style="margin-top: 0.5rem;" id="clearBufferBtn">🗑️ 清空重來</button>
             
             <div id="b2fStatus" class="status-msg" style="margin-top: 1rem;"></div>
@@ -279,7 +278,7 @@
         }
     }
 
-    // === 模組一：自動縮小 + 極限壓縮 ===
+    // === 模組一：自動縮小 + 純黑白洗鍊 ===
     const imgDropZone = document.getElementById('imgDropZone');
     const imgInput = document.getElementById('imgInput');
     const imgQuality = document.getElementById('imgQuality');
@@ -301,7 +300,7 @@
     imgInput.addEventListener('change', e => { if (e.target.files.length) processImg(e.target.files[0]); });
     
     imgQuality.addEventListener('input', e => {
-        imgQualityVal.textContent = `破壞度 ${e.target.value}%`;
+        imgQualityVal.textContent = `對比度調整`;
         if (imgInput.files.length) processImg(imgInput.files[0]);
     });
 
@@ -315,8 +314,8 @@
         reader.onload = e => {
             const img = new Image();
             img.onload = () => {
-                // 【核心：強制縮放機制】強制寬高不超過 300px
-                const MAX_SIZE = 300;
+                // 【升級】：因為變成純黑白，極限尺寸可以放大到 450px 依然安全！
+                const MAX_SIZE = 450; 
                 let width = img.width;
                 let height = img.height;
                 
@@ -334,30 +333,48 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                const quality = imgQuality.value / 100;
+                // === 核心魔法：純黑白二值化 ===
+                const imageData = ctx.getImageData(0, 0, width, height);
+                const data = imageData.data;
+                const threshold = parseInt(imgQuality.value); // 取得拉桿設定的界線值 (50~200)
+
+                for (let i = 0; i < data.length; i += 4) {
+                    // 算出這個像素的灰階亮度 (人眼感知權重)
+                    const brightness = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+                    
+                    // 二值化：大於界線變全白(255)，小於變全黑(0)
+                    const color = brightness > threshold ? 255 : 0;
+                    
+                    data[i]     = color; // 紅色
+                    data[i + 1] = color; // 綠色
+                    data[i + 2] = color; // 藍色
+                    // data[i + 3] 透明度維持不變
+                }
                 
-                // 轉為 WebP Blob 確認容量
+                // 將洗鍊後的純黑白像素塞回畫布
+                ctx.putImageData(imageData, 0, 0);
+                // === 魔法結束 ===
+
+                // 轉為 WebP Blob 確認容量 (壓縮率設為 0.8 即可，因為1-bit本身就很小)
                 canvas.toBlob(blob => {
                     const kbSize = (blob.size / 1024).toFixed(1);
                     webpPreview.src = URL.createObjectURL(blob);
                     webpPreview.classList.remove('hidden');
                     
                     if (blob.size > 8000) {
-                        showStatus('imgStatus', `⚠️ 目前大小 ${kbSize} KB (超過 LINE 限制，請調低破壞度)`, 'warning');
+                        showStatus('imgStatus', `⚠️ 目前大小 ${kbSize} KB (超過 LINE 8KB 限制，請縮小原始圖片)`, 'warning');
                         packSection.classList.add('hidden');
                     } else {
-                        showStatus('imgStatus', `✅ 完美！大小僅 ${kbSize} KB，可以一包發送！`, 'success');
+                        showStatus('imgStatus', `✅ 黑白魔法大成功！大小僅 ${kbSize} KB！`, 'success');
                         packSection.classList.remove('hidden');
                         
-                        // 直接將 Canvas 轉 Base64 並加上極簡標頭
-                        const rawB64 = canvas.toDataURL('image/webp', quality).split(',')[1];
-                        finalBase64Code = `?IMG?${rawB64}`; // 極簡標籤，節省字數
+                        const rawB64 = canvas.toDataURL('image/webp', 0.8).split(',')[1];
+                        finalBase64Code = `?IMG?${rawB64}`; 
                         secretCodePreview.textContent = finalBase64Code + " ... (以下省略)";
                         
-                        // 自動捲動到按鈕
                         packSection.scrollIntoView({ behavior: 'smooth' });
                     }
-                }, 'image/webp', quality);
+                }, 'image/webp', 0.8);
             };
             img.src = e.target.result;
         };
@@ -400,23 +417,21 @@
             return;
         }
 
-        // 偵測是否為一包流專用標籤
         if (rawCode.startsWith('?IMG?')) {
-            const b64Data = rawCode.substring(5).replace(/\s/g, ''); // 去除標頭和空白
+            const b64Data = rawCode.substring(5).replace(/\s/g, ''); 
             
             imageDisplayArea.innerHTML = `
-                <h3 style="color: var(--accent-color); margin: 1rem 0;">🎉 解碼成功！</h3>
+                <h3 style="color: var(--accent-color); margin: 1rem 0;">🎉 顯影成功！</h3>
                 <img src="data:image/webp;base64,${b64Data}" class="scanned-img">
             `;
             
             showStatus('b2fStatus', '', '');
-            pasteArea.value = ''; // 清空輸入框
+            pasteArea.value = ''; 
             
-            // 自動捲動到圖片
             imageDisplayArea.scrollIntoView({ behavior: 'smooth' });
             
         } else {
-            showStatus('b2fStatus', '⚠️ 密碼格式不對，這是神秘傳圖器專屬密碼嗎？', 'warning');
+            showStatus('b2fStatus', '⚠️ 密碼格式不對，這真的是神秘復古碼嗎？', 'warning');
         }
     });
 </script>
